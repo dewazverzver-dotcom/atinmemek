@@ -7,7 +7,7 @@ local coordinates = {
 }
 
 -- Daftar username VIP (ganti dengan username Roblox Anda)
-local allowedUsernames = {"semerawut4","Rosidsva33","MangJarwok","Reskyyyzz","Sanjetzz","adriannnsvr","AsepKopling400","bsk_mokeljam12","junhgbt"} -- Ganti dengan username Anda, misalnya {"Player123", "Player456"}
+local allowedUsernames = {"rohimzver","Rosidsva33","MangJarwok","Reskyyyzz","Sanjetzz","adriannnsvr","AsepKopling400","bsk_mokeljam12","junhgbt"} -- Ganti dengan username Anda, misalnya {"Player123", "Player456"}
 
 -- Fungsi untuk memeriksa apakah username diizinkan
 local function isAllowedUsername()
