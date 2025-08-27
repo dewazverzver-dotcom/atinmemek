@@ -1,0 +1,118 @@
+local player = game.Players.LocalPlayer
+local StarterGui = game:GetService("StarterGui")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local coordinates = {
+    {x=781.1, y=2178.099, z=3922.57},
+}
+
+-- Daftar username VIP (ganti dengan username Roblox Anda)
+local allowedUsernames = {"semerawut4","Rosidsva33","MangJarwok","Reskyyyzz","Sanjetzz","adriannnsvr","AsepKopling400","bsk_mokeljam12","junhgbt"} -- Ganti dengan username Anda, misalnya {"Player123", "Player456"}
+
+-- Fungsi untuk memeriksa apakah username diizinkan
+local function isAllowedUsername()
+    for _, username in ipairs(allowedUsernames) do
+        if player.Name == username then
+            return true
+        end
+    end
+    return false
+end
+
+local function teleportTo(pos)
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(pos.x, pos.y + 3, pos.z)
+    end
+end
+
+local function serverHop()
+    local success, errorMsg = pcall(function()
+        local Servers = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+        local Server, Next = nil, nil
+        local function ListServers(cursor)
+            pcall(function()
+                StarterGui:SetCore("SendNotification", {Title="Debug", Text="Fetching servers...", Duration=2})
+            end)
+            local Raw = game:HttpGet(Servers .. ((cursor and "&cursor=" .. cursor) or ""))
+            return HttpService:JSONDecode(Raw)
+        end
+        local maxAttempts = 3
+        local attempts = 0
+        repeat
+            attempts = attempts + 1
+            local Servers = ListServers(Next)
+            if Servers.data and #Servers.data > 0 then
+                Server = Servers.data[math.random(1, math.max(1, math.floor(#Servers.data / 3)))]
+                pcall(function()
+                    StarterGui:SetCore("SendNotification", {Title="Debug", Text="Found server: " .. Server.id, Duration=2})
+                end)
+            else
+                pcall(function()
+                    StarterGui:SetCore("SendNotification", {Title="Debug", Text="No servers found in this batch.", Duration=2})
+                end)
+            end
+            Next = Servers.nextPageCursor
+        until Server or attempts >= maxAttempts or not Next
+        if Server and Server.playing < Server.maxPlayers and Server.id ~= game.JobId then
+            pcall(function()
+                StarterGui:SetCore("SendNotification", {Title="Debug", Text="Hopping to server " .. Server.id, Duration=3})
+            end)
+            TeleportService:TeleportToPlaceInstance(game.PlaceId, Server.id, player)
+        else
+            pcall(function()
+                StarterGui:SetCore("SendNotification", {Title="Server Hop Failed", Text="No suitable server found. Trying fallback rejoin...", Duration=5})
+            end)
+            wait(1)
+            TeleportService:Teleport(game.PlaceId, player)
+        end
+    end)
+    if not success then
+        pcall(function()
+            StarterGui:SetCore("SendNotification", {Title="Server Hop Failed", Text="Error: " .. errorMsg .. ". Trying fallback rejoin...", Duration=5})
+        end)
+        wait(1)
+        pcall(function()
+            TeleportService:Teleport(game.PlaceId, player)
+        end)
+    end
+end
+
+local function autoTeleport()
+    -- Periksa username VIP
+    if not isAllowedUsername() then
+        pcall(function()
+            StarterGui:SetCore("SendNotification", {Title="VIP Access Denied", Text="Unauthorized user. Script will not run.", Duration=5})
+        end)
+        return
+    end
+
+    -- Notifikasi akses VIP
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {Title="VIP Access Granted", Text="Welcome, " .. player.Name .. "! Starting teleport in 10 seconds...", Duration=5})
+    end)
+
+    -- Countdown mundur 10 detik
+    for i = 2, 1, -1 do
+        pcall(function()
+            StarterGui:SetCore("SendNotification", {Title="Teleport", Text="Teleport will start in " .. i .. "...", Duration=1.5})
+        end)
+        wait(1)
+    end
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {Title="Teleport Started", Text="Teleporting to coordinates...", Duration=3})
+    end)
+    for _, pos in ipairs(coordinates) do
+        teleportTo(pos)
+        wait(1)
+    end
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {Title="Teleport Completed", Text="All teleports finished. Hopping to random server in 5 seconds...", Duration=5})
+    end)
+    wait(5) -- Delay 5 detik sebelum server hop
+    pcall(function()
+        serverHop()
+    end)
+end
+
+-- Execute otomatis
+autoTeleport()
